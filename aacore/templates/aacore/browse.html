@@ -1,0 +1,18 @@
+<form action=".">{% csrf_token %}
+{{ form.as_p }}
+
+<p><input type="submit" name="_submit" value="ok" /></p>
+{% if resource %}
+<p><input type="submit" name="_submit" value="reload" /></p>
+{% endif %}
+</form>
+
+
+<dl>
+{% for result in results %}
+
+<dt>{{ result.predicate }}</dt>
+<dd>{{ result.object }}</dd>
+
+{% endfor %}
+</dl>
