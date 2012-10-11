@@ -27,7 +27,8 @@ from django.http import HttpResponseRedirect
 from django.template import RequestContext 
 
 from forms import ResourceForm
-from rdfindex import AAResource 
+from aacore import RDF_MODEL
+from aacore.sniffers import AAResource 
 import RDF
 
 
@@ -51,20 +52,12 @@ def browse(request):
             }
         """ % node
 
-        storage_dir = "/tmp"
-        storage_name = "aa"
-
-        options = "hash-type='bdb', contexts='yes', dir='%s'" % storage_dir
-        storage = RDF.HashStorage(storage_name, options=options)
-        model = RDF.Model(storage)
-
-        rdf_results = RDF.Query(query.encode("utf-8"), query_language="sparql").execute(model)
+        rdf_results = RDF.Query(query.encode("utf-8"), query_language="sparql").execute(RDF_MODEL)
 
         results = []
 
         for result in rdf_results:
             results.append(result)
-        #import pdb; pdb.set_trace()
 
         form = ResourceForm()
         return render_to_response("aacore/browse.html", {"form": form, "results": results}, 
