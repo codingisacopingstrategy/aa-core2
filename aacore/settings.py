@@ -24,4 +24,4 @@ RDF_STORAGE_NAME = getattr(settings, 'AA_RDF_STORAGE_NAME', "aa")
 # Must be an absolute path
 RDF_STORAGE_DIR = getattr(settings, 'AA_RDF_STORAGE_DIR', os.path.dirname(os.path.normpath(os.sys.modules[settings.SETTINGS_MODULE].__file__)))
 
-SNIFFERS = getattr(settings, 'AA_SNIFFERS', ["aacore.sniffers.image", "aacore.sniffers.youtube"])
+SNIFFERS = getattr(settings, 'AA_SNIFFERS', ["aacore.sniffers.image", "aacore.sniffers.youtube", "aacore.sniffers.ogg", "aacore.sniffers.html"])

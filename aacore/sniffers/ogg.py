@@ -7,9 +7,23 @@ from django.template.loader import get_template
 try: import simplejson as json
 except ImportError: import json
 
+import RDF
+
 
 @sniffer("application/ogg")
 class OggSniffer(object):
+    def test(self, model):
+        q = '''
+        PREFIX aa: <http://activearchives.org/terms/>
+        ASK {
+            ?a aa:content-type ?ct.
+            FILTER (?ct = "application/ogg" ||
+                    ?ct = "audio/ogg"       ||
+                    ?ct = "video/ogg").
+        }'''
+        results = RDF.Query(q, query_language="sparql").execute(model)
+        return results.get_boolean()
+
     def sniff(self, url):
         print("sniffed an ogg file")
         print(url)
