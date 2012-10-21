@@ -2,14 +2,17 @@ from aacore.sniffers import sniffer
 import RDF
 
 
-@sniffer("text/html")
+@sniffer("rdfa")
 class YoutubeSniffer(object):
     def test(self, model):
         q = '''
         PREFIX aa: <http://activearchives.org/terms/>
         ASK {
-            ?a aa:content-type "text/html"
-            FILTER (REGEX(str(?a), "^http://www.youtube")).
+            { ?subject aa:content-type "text/html" .}
+            UNION
+            { ?subject aa:mime-type "text/html" .}
+
+            FILTER (REGEX(str(?subject), "^http://www.youtube")).
         }'''
         results = RDF.Query(q, query_language="sparql").execute(model)
         return results.get_boolean()

@@ -193,3 +193,11 @@ def iso8601_date (date):
         #literal = rdfnode(node)
         # FIXME: urlencode does not seem to appreciate Arabic:
         #        UnicodeEncodeError at /browse/ with URL <http://www.youtube.com/watch?v=YeoF74Vu180>
+
+
+@register.filter
+def dashify(value):
+    """
+    Substitues underscores with dashes
+    """
+    return value.replace ("_", "-")

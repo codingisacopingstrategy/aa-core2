@@ -1,19 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
+
+{% load aacoretags %}
+
 <html xmlns="http://www.w3.org/1999/xhtml" 
     xmlns:aa="http://activearchives.org/terms/"
     version="XHTML+RDFa 1.1"
     >
-  <head>
-    <title>Virtual Library</title>
-  </head>
-  <body>
+    <head>
+        <title>Virtual Library</title>
+    </head>
+    <body>
         <p about="{{ url }}">
-        <span property="aa:content-type">{{ metadata.content_type }}</span>
-        <span property="aa:charset">{{ metadata.charset }}</span>
-        <span property="aa:content-length">{{ metadata.content_length }}</span>
-        <span property="aa:last_modified">{{ metadata.last_modified }}</span>
-        <span property="aa:etag">{{ metadata.etag }}</span>
-        <span property="aa:status">{{ metadata.status }}</span>
+        {% for key,value in metadata.items %}
+            {% if value %}
+            <span property="aa:{{ key|dashify }}">{{ value }}</span>
+            {% endif %}
+        {% endfor %}
         </p>
-  </body>
+    </body>
 </html>

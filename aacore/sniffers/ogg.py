@@ -10,13 +10,15 @@ except ImportError: import json
 import RDF
 
 
-@sniffer("application/ogg")
+@sniffer("rdfa")
 class OggSniffer(object):
     def test(self, model):
         q = '''
         PREFIX aa: <http://activearchives.org/terms/>
         ASK {
-            ?a aa:content-type ?ct.
+            { ?a aa:content-type ?ct. }
+            UNION
+            { ?a aa:mime-type ?ct. }
             FILTER (?ct = "application/ogg" ||
                     ?ct = "audio/ogg"       ||
                     ?ct = "video/ogg").
