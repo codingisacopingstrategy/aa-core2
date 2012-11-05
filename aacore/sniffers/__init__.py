@@ -15,36 +15,41 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 # Also add information on how to contact you by electronic and paper mail.
 
+
 """
 aacore.sniffers
 """
 
-import urllib2
-import magic
-import re
-import subprocess
-import RDF
 
-from django.template import Template, Context
-from django.template.loader import get_template
-from urllib2utils import ResourceOpener
+import html5lib
+import RDF
+import requests
+
 
 from aacore import RDF_MODEL
 from aacore.settings import SNIFFERS
-from html5tidy import tidy
 
 
 sniffers = []
 
 
-rdfa = RDF.Parser("rdfa")
-
-
-def extract(d, keys):
+def tidy(method):
     """
-    Extracts named keys from a dictionnary.
+    Tidies the ouput of the given Sniffer sniff method.
     """
-    return dict((k, d[k]) for k in keys if k in d)
+    def decorator(self):
+        string = method(self)
+
+        if not string:
+            return string
+
+        if self.syntax == "rdfa":
+            parser = html5lib.HTMLParser(tree=html5lib.treebuilders.getTreeBuilder("dom"))
+            dom = parser.parse(string, encoding='utf-8')
+            string = dom.toxml()
+
+        return string
+    return decorator
 
 
 def sniffer(syntax):
@@ -55,6 +60,7 @@ def sniffer(syntax):
     """
     def decorator(cls):
         cls.syntax = syntax
+        cls.sniff = tidy(cls.sniff)
         sniffers.append(cls)
         return cls
     return decorator 
@@ -67,20 +73,9 @@ class AAResource(object):
     Implements an index method that is used to inspect the resource and store
     the information found in the RDF store.
     """
-    def __init__(self, url, content=None):
+    def __init__(self, url):
         self.url = url
-        self.content = content
         self.dummy_model = self.get_dummy_model()
-
-    def get_sniffers(self):
-        """
-        Tests the available sniffers and returns the matching ones.
-        """
-        cls = []
-        for sniffer in sniffers:
-            if sniffer().test(self.dummy_model):
-                cls.append(sniffer)
-        return cls
 
     def get_dummy_model(self):
         """
@@ -92,58 +87,23 @@ class AAResource(object):
         storage = RDF.HashStorage('dummy', options=options)
         return RDF.Model(storage)
 
-    def index_content(self):
-        metadata = {}
-        mime = magic.from_buffer(tidy(self.content), mime=True)
-        metadata['mime_type'] = mime
-        print("Detected mime-type: %s" % mime)
-
-        t = get_template("aacore/http.html")
-        c = Context({'metadata': metadata, 'url': self.url})
-
-        rdfa.parse_string_into_model(self.dummy_model, t.render(c).encode("utf-8"), self.url)
-        #print("indexing content at %s" % self.url)
-        #string = tidy(self.content)
-        #rdfa.parse_string_into_model(self.dummy_model, string, self.url)
-
-        RDF_MODEL.remove_statements_with_context(RDF.Node(self.url))
-        RDF_MODEL.add_statements(self.dummy_model.as_stream(), RDF.Node(self.url))
-        RDF_MODEL.sync()
-
-
     def index(self):
         """
         Inspects the resource and store the information found in the RDF store.
         """
-        # Opens an HTTP request
-        try:
-            data = ResourceOpener(url=self.url)
-            data.get()
-        except urllib2.HTTPError, e:
-            data.status = e.code
-
-        # Extracts some interesting response fields
-        interesting_keys = ['content_type', 'charset', 'content_length', 'last_modified', 'etag', 'status']
-        metadata = extract(data.__dict__, interesting_keys)
-
-        # Detects the mime type from content as an alternative to content-type
-        mime = magic.from_buffer(data.file.read(1024), mime=True)
-        metadata['mime_type'] = mime
-
-        # Maps the HTTP metadata to RDFa and indexes it in a temporary model
-        t = get_template("aacore/http.html")
-        c = Context({'metadata': metadata, 'url': self.url})
-        rdfa.parse_string_into_model(self.dummy_model, t.render(c).encode("utf-8"), self.url)
+        request = requests.get(self.url, prefetch=False)
 
         # Indexes the content with the appropriate agents (sniffers)
-        for sniffer in self.get_sniffers():
-            string = sniffer().sniff(self.url)
+        for sniffer in sniffers:
+            sniffer = sniffer(request=request, model=self.dummy_model)
+            string = sniffer.sniff() if sniffer.test() else None
+
             if not string:
                 break
-            if sniffer.syntax == "rdfa":
-                string = tidy(string)
+
             parser = RDF.Parser(name=sniffer.syntax)
-            parser.parse_string_into_model(self.dummy_model, string.encode("utf-8"), self.url)
+            #parser.parse_string_into_model(self.dummy_model, string.encode("utf-8"), self.url)
+            parser.parse_string_into_model(self.dummy_model, string, self.url)
 
         # Replaces from the RDF model the existing statements with the new ones
         RDF_MODEL.remove_statements_with_context(RDF.Node(self.url))

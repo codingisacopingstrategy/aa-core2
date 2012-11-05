@@ -20,6 +20,7 @@
 Active Archives aacore views
 """
 
+import RDF
 
 from django.shortcuts import render
 from django.shortcuts import (render_to_response, get_object_or_404)
@@ -28,8 +29,10 @@ from django.template import RequestContext
 
 from forms import ResourceForm
 from aacore import RDF_MODEL
+from aacore.models import Namespace
 from aacore.sniffers import AAResource 
-import RDF
+from rdfutils import load_links
+from urlparse import urlparse
 
 
 def browse(request):
@@ -44,7 +47,11 @@ def browse(request):
     else:
         AAResource(node).index()
 
-        print(node)
+        # RDF distinguishes URI and literals...
+        is_literal = urlparse(node).scheme not in ('file', 'http', 'https')
+        #print(load_links(RDF_MODEL, node, literal=is_literal))
+
+        #print(node)
         query = """PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
             SELECT ?predicate ?object
             WHERE {
@@ -60,6 +67,28 @@ def browse(request):
             results.append(result)
 
         form = ResourceForm()
-        return render_to_response("aacore/browse.html", {"form": form, "results": results}, 
+        return render_to_response("aacore/browse.html", {"node": node, "form": form, "results": results}, 
                                   context_instance=RequestContext(request))
+
+
+def namespaces_css (request):
+    """
+    Generates a stylesheet with the namespace colors.
+
+    **Context**
+
+    ``RequestContext``
+
+    ``namespaces``
+        A queryset of all :model:`aacore.Namespace`.
+
+    **Template:**
+
+    :template:`aacore/namespaces.css`
+    """
+    context = {}
+    context['namespaces'] = Namespace.objects.all()
+    return render_to_response("aacore/namespaces.css", context, 
+                              context_instance=RequestContext(request), mimetype="text/css")
+
 

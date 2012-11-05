@@ -4,7 +4,10 @@ import RDF
 
 @sniffer("rdfa")
 class YoutubeSniffer(object):
-    def test(self, model):
+    def __init__(self, resource):
+        self.resource = resource
+
+    def test(self):
         q = '''
         PREFIX aa: <http://activearchives.org/terms/>
         ASK {
@@ -14,10 +17,10 @@ class YoutubeSniffer(object):
 
             FILTER (REGEX(str(?subject), "^http://www.youtube")).
         }'''
-        results = RDF.Query(q, query_language="sparql").execute(model)
+        results = RDF.Query(q, query_language="sparql").execute(self.resource.dummy_model)
         return results.get_boolean()
 
-    def sniff(self, url):
+    def sniff(self):
         print("sniffed an youtube page")
-        print(url)
+        print(self.resource.url)
         return "ok"

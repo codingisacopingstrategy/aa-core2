@@ -4,6 +4,8 @@
 
 <html xmlns="http://www.w3.org/1999/xhtml" 
     xmlns:aa="http://activearchives.org/terms/"
+    xmlns:dct="http://purl.org/dc/terms/"
+    xmlns:hdr="http://www.w3.org/2011/http-headers#"
     version="XHTML+RDFa 1.1"
     >
     <head>
@@ -11,9 +13,11 @@
     </head>
     <body>
         <p about="{{ url }}">
-        {% for key,value in metadata.items %}
+            <span property="dct:format">{{ mime }}</span>
+
+        {% for key,value in headers.items %}
             {% if value %}
-            <span property="aa:{{ key|dashify }}">{{ value }}</span>
+            <span property="hdr:{{ key }}">{{ value }}</span>
             {% endif %}
         {% endfor %}
         </p>

@@ -16,13 +16,23 @@
 # Also add information on how to contact you by electronic and paper mail.
 
 
-from django.conf import settings
-import os
+"""
+Active Archives aacore models
+"""
 
 
-RDF_STORAGE_NAME = getattr(settings, 'AA_RDF_STORAGE_NAME', "aa")
-# Must be an absolute path
-RDF_STORAGE_DIR = getattr(settings, 'AA_RDF_STORAGE_DIR', os.path.dirname(os.path.normpath(os.sys.modules[settings.SETTINGS_MODULE].__file__)))
+from django.db import models
 
-#SNIFFERS = getattr(settings, 'AA_SNIFFERS', ["aacore.sniffers.image", "aacore.sniffers.youtube", "aacore.sniffers.ogg", "aacore.sniffers.html"])
-SNIFFERS = getattr(settings, 'AA_SNIFFERS', ["aacore.sniffers.http", "aacore.sniffers.html"])
+
+class Namespace (models.Model):
+    """
+    Defines RDF namespaces and assigns them HTML colors.
+    
+    Colors are used to generate stylesheets. 
+    """
+    name = models.CharField(max_length=255)
+    url = models.CharField(max_length=255)
+    color = models.CharField(max_length=255, blank=True)
+
+    def __unicode__(self):
+        return self.name
