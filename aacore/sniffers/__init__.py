@@ -46,6 +46,14 @@ def tidy(method):
         if self.syntax == "rdfa":
             parser = html5lib.HTMLParser(tree=html5lib.treebuilders.getTreeBuilder("dom"))
             dom = parser.parse(string, encoding='utf-8')
+
+            # Redland crashes if no xmlns attribute is declared.
+            # see: http://bugs.librdf.org/mantis/view.php?id=521
+            # Lets fix it in the meanwhile...
+            elt = dom.getElementsByTagName("html")[0]
+            if not elt.hasAttribute("xmlns"):
+                elt.setAttribute("xmlns", "http://www.w3.org/1999/xhtml")
+
             string = dom.toxml()
 
         return string
@@ -98,12 +106,9 @@ class AAResource(object):
             sniffer = sniffer(request=request, model=self.dummy_model)
             string = sniffer.sniff() if sniffer.test() else None
 
-            if not string:
-                break
-
-            parser = RDF.Parser(name=sniffer.syntax)
-            #parser.parse_string_into_model(self.dummy_model, string.encode("utf-8"), self.url)
-            parser.parse_string_into_model(self.dummy_model, string, self.url)
+            if string:
+                parser = RDF.Parser(name=sniffer.syntax)
+                parser.parse_string_into_model(self.dummy_model, string.encode("utf-8"), self.url)
 
         # Replaces from the RDF model the existing statements with the new ones
         RDF_MODEL.remove_statements_with_context(RDF.Node(self.url))
