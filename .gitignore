@@ -6,3 +6,5 @@
 .svn
 *.swp
 *.orig
+dist
+*.egg-info
