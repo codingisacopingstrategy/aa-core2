@@ -14,7 +14,7 @@ setup(
         '"active", in-place and online. Caching and proxy functionality allow',
         'light-weight) copies of resources to be manipulated and preserved',
         'even, as the original sources change or become (temporarily)',
-        'unavailable.')
+        'unavailable.'),
     url='http://activearchives.org/',
     packages=['aacore', 'aacore.sniffers', 'aacore.templatetags'],
     dependency_links=[
