@@ -23,7 +23,7 @@ setup(
     install_requires=[
         'django>=1.4,<1.5',
         'html5lib',
-        'requests',
+        'requests==0.14.2',
         'python-magic',
         'html5tidy',
     ],
