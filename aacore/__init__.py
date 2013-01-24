@@ -1,5 +1,5 @@
 import RDF
-from aacore import settings
+import settings
 
 
 options = "hash-type='bdb', contexts='yes', dir='%s'" % settings.RDF_STORAGE_DIR
