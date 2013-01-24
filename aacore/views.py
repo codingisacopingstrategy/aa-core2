@@ -24,8 +24,11 @@ import RDF
 
 from django.shortcuts import render
 from django.shortcuts import (render_to_response, get_object_or_404)
-from django.http import HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect
 from django.template import RequestContext 
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+from django.core.exceptions import PermissionDenied
 
 from forms import ResourceForm
 from aacore import RDF_MODEL
@@ -70,6 +73,28 @@ def browse(request):
         return render_to_response("aacore/browse.html", {"node": node, "form": form, "results": results}, 
                                   context_instance=RequestContext(request))
 
+@csrf_exempt
+@require_http_methods(["POST"])
+def sparql(request):
+    """
+    Implement a simple SPARQL endpoint, accessible through POST requests.
+    
+    > Protocol clients may send protocol requests via the HTTP POST method
+    > by including the query directly and unencoded as the HTTP request
+    > message body.  [1] 
+    
+    Sends back Sparql results in an XML serialisation,
+    with mime/type application/sparql-results+xml [2]
+    
+    [1] http://www.w3.org/TR/sparql11-protocol/#query-via-post-direct 
+    [2] http://www.w3.org/TR/rdf-sparql-XMLres/#mime
+    """
+    if request.META['CONTENT_TYPE'] == 'application/sparql-query':
+        query = request.body
+        rdf_results = RDF.Query(query.encode("utf-8"), query_language="sparql").execute(RDF_MODEL)
+        return HttpResponse(rdf_results.to_string(), mimetype="application/sparql-results+xml")
+    else:
+        raise PermissionDenied
 
 def namespaces_css (request):
     """
