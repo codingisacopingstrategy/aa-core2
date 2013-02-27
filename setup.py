@@ -17,6 +17,7 @@ setup(
         'unavailable.'),
     url='http://activearchives.org/',
     packages=['aacore', 'aacore.sniffers', 'aacore.templatetags'],
+    include_package_data = True,
     dependency_links=[
         'git+git://git.constantvzw.org/aa.rdfutils.git#egg=rdfutils-0.1',
     ],
